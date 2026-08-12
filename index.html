@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Backstitch</title>
+<meta name="description" content="Embroider the front. The game judges the back. Fourteen hoops, one grandmother's standard." />
+<meta property="og:title" content="Backstitch" />
+<meta property="og:description" content="Embroider the front you're given. The back is where the truth lives." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://backstitch.defimagic.io" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%A1%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --ecru: #f2e8d5;
+    --linen: #fbf5e8;
+    --ink: #3a2e22;
+    --ink-soft: #6b5c47;
+    --line: #c9b898;
+    --thread-red: #a8402c;
+    --thread-blue: #2f5f7f;
+    --thread-green: #4f7942;
+    --thread-gold: #b8892b;
+    --clean: #4f7942;
+    --honest: #b8892b;
+    --nest: #a8402c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--ecru);
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+    height: 100%;
+  }
+  body {
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+  }
+  #app {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    position: relative;
+  }
+  .screen { display: none; flex: 1; flex-direction: column; padding: 20px 20px 28px; }
+  .screen.active { display: flex; }
+
+  .thread-strip { display: flex; height: 6px; width: 100%; }
+  .thread-strip span { flex: 1; }
+  .thread-strip span:nth-child(1) { background: var(--thread-red); }
+  .thread-strip span:nth-child(2) { background: var(--thread-gold); }
+  .thread-strip span:nth-child(3) { background: var(--thread-green); }
+  .thread-strip span:nth-child(4) { background: var(--thread-blue); }
+
+  h1 { font-size: 2.1rem; margin: 0.4em 0 0.1em; letter-spacing: 0.02em; }
+  h2 { font-size: 1.3rem; margin: 0.6em 0 0.3em; }
+  p { line-height: 1.5; color: var(--ink-soft); }
+  .tagline { font-style: italic; color: var(--ink-soft); margin-top: 0; }
+
+  .title-screen { justify-content: center; align-items: center; text-align: center; gap: 6px; }
+  .hoop-icon { font-size: 4rem; margin-bottom: 4px; }
+
+  button {
+    font-family: inherit;
+    font-size: 1rem;
+    border: 1px solid var(--ink);
+    background: var(--linen);
+    color: var(--ink);
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 6px 0;
+  }
+  button.primary { background: var(--ink); color: var(--linen); }
+  button.small { padding: 8px 14px; font-size: 0.9rem; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-row button { flex: 1; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .progress-label { color: var(--ink-soft); font-size: 0.9rem; }
+
+  canvas { width: 100%; background: var(--linen); border: 1px solid var(--line); border-radius: 10px; touch-action: manipulation; }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    margin: 10px 0;
+    border: 1px solid var(--ink);
+  }
+  .grade-Clean { background: color-mix(in srgb, var(--clean) 20%, var(--linen)); color: var(--clean); border-color: var(--clean); }
+  .grade-Honest { background: color-mix(in srgb, var(--honest) 20%, var(--linen)); color: var(--honest); border-color: var(--honest); }
+  .grade-Birds-Nest { background: color-mix(in srgb, var(--nest) 20%, var(--linen)); color: var(--nest); border-color: var(--nest); }
+
+  .stat-row { display: flex; justify-content: space-between; font-size: 0.95rem; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+  .flavor { font-style: italic; margin-top: 4px; }
+
+  .howto-list { padding-left: 1.1em; }
+  .howto-list li { margin-bottom: 0.7em; line-height: 1.5; color: var(--ink-soft); }
+
+  .final-list { list-style: none; padding: 0; margin: 8px 0; }
+  .final-list li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+
+  .footer-note { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); text-align: center; padding-top: 10px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="screen active title-screen" id="screen-title">
+    <div class="thread-strip" style="position:absolute;top:0;left:0;right:0;"><span></span><span></span><span></span><span></span></div>
+    <div class="hoop-icon">&#129697;</div>
+    <h1>Backstitch</h1>
+    <p class="tagline">A lady's back is as neat as her front.</p>
+    <div style="height:14px"></div>
+    <button class="primary" id="btn-play">Take Up the Hoop</button>
+    <button class="small" id="btn-howto">How It's Sewn</button>
+    <p class="footer-note">14 hoops. Your stitches show on the front.<br>What they cost shows on the back.</p>
+  </div>
+
+  <div class="screen" id="screen-howto">
+    <div class="topbar"><button class="small" id="btn-howto-back">&larr; Back</button></div>
+    <h2>How It's Sewn</h2>
+    <ol class="howto-list">
+      <li>Each hoop gives you a fixed pattern on the <strong>front</strong> &mdash; the stitches are already decided. What isn't decided is the <strong>order</strong> you sew them in.</li>
+      <li>Tap the stitches in the order you'd like to sew them. The needle has to travel between stitches that don't touch &mdash; that travel doesn't show on the front. It shows on the <strong>back</strong>.</li>
+      <li>Wander too far off order and the thread has to be cut and knotted, or two travels cross and tangle. Sew with a plan, and the back stays honest.</li>
+      <li>When every stitch is placed, flip the hoop. The back is graded: <strong>Clean</strong>, <strong>Honest</strong>, or <strong>Bird's Nest</strong>.</li>
+    </ol>
+    <p>There's no fixing the front &mdash; it's already beautiful. The whole game is what you leave behind it.</p>
+    <div style="flex:1"></div>
+    <button class="primary" id="btn-howto-play">Take Up the Hoop</button>
+  </div>
+
+  <div class="screen" id="screen-play">
+    <div class="topbar">
+      <span class="progress-label" id="hoop-label">Hoop 1 of 14</span>
+      <button class="small" id="btn-play-menu">Menu</button>
+    </div>
+    <p id="play-instruction">Tap the stitches, in the order you'll sew them.</p>
+    <canvas id="canvas-front" width="300" height="420"></canvas>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="small" id="btn-undo">Undo</button>
+      <button class="small" id="btn-reset">Reset</button>
+    </div>
+    <button class="primary" id="btn-flip" disabled>Flip the Hoop</button>
+  </div>
+
+  <div class="screen" id="screen-reveal">
+    <div class="topbar">
+      <span class="progress-label" id="reveal-label">Hoop 1 &middot; the back</span>
+    </div>
+    <canvas id="canvas-back" width="300" height="420"></canvas>
+    <div id="grade-wrap" style="text-align:center">
+      <span class="grade-badge" id="grade-badge">Clean</span>
+      <p class="flavor" id="grade-flavor">grandmother would flip it and nod</p>
+    </div>
+    <div id="stats">
+      <div class="stat-row"><span>Float thread</span><span id="stat-float">0</span></div>
+      <div class="stat-row"><span>Tangles (crossings)</span><span id="stat-cross">0</span></div>
+      <div class="stat-row"><span>Knots tied</span><span id="stat-knots">0</span></div>
+      <div class="stat-row"><span>Grandmother's own path</span><span id="stat-master">&mdash;</span></div>
+    </div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="small" id="btn-resew">Sew Again</button>
+      <button class="small" id="btn-share">Copy Share</button>
+    </div>
+    <button class="primary" id="btn-next">Next Hoop</button>
+  </div>
+
+  <div class="screen" id="screen-final">
+    <h2>Fourteen hoops, done.</h2>
+    <p>Here's what the back of each one said.</p>
+    <ul class="final-list" id="final-list"></ul>
+    <button class="primary" id="btn-final-share">Copy Share</button>
+    <button class="small" id="btn-final-restart">Sew Them Again</button>
+  </div>
+
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
